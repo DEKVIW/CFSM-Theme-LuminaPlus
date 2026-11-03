@@ -1,4 +1,6 @@
 import { Globe2 } from "lucide-react";
+import * as FlagIcons from "country-flag-icons/react/3x2";
+import type { ComponentType, SVGProps } from "react";
 import { t } from "@/i18n";
 import { getDisplayRegionCode } from "@/utils/geo";
 
@@ -7,12 +9,15 @@ interface FlagProps {
   size?: number;
 }
 
-function countryFlagEmoji(code: string): string | null {
+type CountryFlag = ComponentType<SVGProps<SVGSVGElement>>;
+
+function countryFlag(code: string): CountryFlag | null {
   const normalized = code.trim().toUpperCase();
   if (!/^[A-Z]{2}$/.test(normalized) || normalized === "UN") return null;
-  return Array.from(normalized)
-    .map((character) => String.fromCodePoint(0x1f1e6 + character.charCodeAt(0) - 65))
-    .join("");
+
+  // Do not use Unicode regional indicators here: Windows commonly renders them
+  // as the literal country code (for example, "US") instead of a flag.
+  return (FlagIcons as Record<string, CountryFlag | undefined>)[normalized] ?? null;
 }
 
 export function Flag({ region, size = 14 }: FlagProps) {
@@ -28,7 +33,7 @@ export function Flag({ region, size = 14 }: FlagProps) {
 
   const flagCode = getDisplayRegionCode(value);
   const alt = t("flag.alt", { code: flagCode });
-  const emoji = countryFlagEmoji(flagCode);
+  const FlagIcon = countryFlag(flagCode);
 
   return (
     <span
@@ -39,7 +44,11 @@ export function Flag({ region, size = 14 }: FlagProps) {
       data-region-code={flagCode}
       style={{ width: size + 8, height: size, fontSize: size }}
     >
-      {emoji ? emoji : <Globe2 size={size - 1} strokeWidth={2.1} />}
+      {FlagIcon ? (
+        <FlagIcon aria-hidden focusable="false" width={size + 8} height={size} />
+      ) : (
+        <Globe2 size={size - 1} strokeWidth={2.1} />
+      )}
     </span>
   );
 }
