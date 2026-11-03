@@ -17,6 +17,7 @@ import {
   normalizeTrafficCalcType,
   parseGpuInfo,
   parseLoadAvg,
+  parsePriceDetails,
   parseTrafficLimitBytes,
   toNodeInfo,
   toNodeMetrics,
@@ -184,6 +185,21 @@ describe("toNodeInfo", () => {
 
     expect(info.ipv4).toBe("1");
     expect(info.ipv6).toBe("");
+  });
+
+  it("splits legacy combined price text used by the backend admin field", () => {
+    const info = toNodeInfo(
+      server({ price: "$63.07/三年", currency: "", billing_cycle: "" }),
+    );
+
+    expect(parsePriceDetails("$63.07/三年")).toEqual({
+      amount: 63.07,
+      currency: "$",
+      billingCycle: "三年",
+    });
+    expect(info.price).toBe(63.07);
+    expect(info.currency).toBe("$");
+    expect(info.billing_cycle).toBe("三年");
   });
 });
 

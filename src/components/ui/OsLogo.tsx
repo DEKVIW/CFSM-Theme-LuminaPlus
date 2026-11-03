@@ -1,5 +1,5 @@
-import { memo, useState } from "react";
-import { hostAssetUrl } from "@/services/cfsm/config";
+import { HardDrive, Monitor, Server, Terminal } from "lucide-react";
+import { memo, type ReactNode } from "react";
 
 interface OsConfig {
   name: string;
@@ -8,15 +8,6 @@ interface OsConfig {
 }
 
 const OS_NAME_SPLIT_REGEX = /[\s/]+/;
-
-/**
- * OS 图标走后端默认皮肤的静态文件，主题不打包（见 theme-develop.md）。
- * 下面 `image` 里只记文件名，必须存在于后端 `public/os-icons/`；没有对应图标的系统
- * 统一落到 os-unknown。URL 在渲染时才拼，模块初始化阶段不依赖 window。
- */
-function osIconUrl(file: string) {
-  return hostAssetUrl(`/os-icons/${file}`);
-}
 
 const OS_CONFIGS: OsConfig[] = [
   {
@@ -211,6 +202,19 @@ function findOsConfig(osString?: string | null): OsConfig {
   return DEFAULT_OS_CONFIG;
 }
 
+function osGlyph(name: string, size: number): ReactNode {
+  if (name === "Windows" || name === "macOS") {
+    return <Monitor size={size} strokeWidth={2} />;
+  }
+  if (name === "Linux") {
+    return <HardDrive size={size} strokeWidth={2} />;
+  }
+  if (name.endsWith("Linux") || name === "FreeBSD") {
+    return <Terminal size={size} strokeWidth={2} />;
+  }
+  return <Server size={size} strokeWidth={2} />;
+}
+
 export function resolveOsInfo(value?: string | null) {
   const config = findOsConfig(value);
   if (config !== DEFAULT_OS_CONFIG) {
@@ -232,24 +236,17 @@ export const OsLogo = memo(function OsLogo({
   size?: number;
 }) {
   const os = resolveOsInfo(value);
-  const [failedImage, setFailedImage] = useState<string | null>(null);
-  const file = failedImage === os.image ? DEFAULT_OS_CONFIG.image : os.image;
-  const src = osIconUrl(file);
 
   return (
-    <img
+    <span
       className="os-logo"
-      src={src}
-      alt={os.name}
+      role="img"
+      aria-label={os.name}
       title={os.name}
-      width={size}
-      height={size}
-      loading="lazy"
-      draggable={false}
-      onError={() => {
-        if (file !== DEFAULT_OS_CONFIG.image) setFailedImage(os.image);
-      }}
+      data-os={os.name}
       style={{ "--os-logo-size": `${size}px` } as React.CSSProperties}
-    />
+    >
+      {osGlyph(os.name, size)}
+    </span>
   );
 });

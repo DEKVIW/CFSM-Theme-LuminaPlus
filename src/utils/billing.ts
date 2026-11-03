@@ -47,7 +47,7 @@ export function classifyBillingCycleWord(
   if (/^(semi-?annual(ly)?|half[-_]?year(ly)?|半年|半年付)$/.test(normalized)) {
     return { kind: "halfYear" };
   }
-  if (/^(annual(ly)?|yearly|year|yr|年|一年|每年|年付)$/.test(normalized)) {
+  if (/^(annual(ly)?|yearly|year|yr|y|年|一年|每年|年付)$/.test(normalized)) {
     return { kind: "year", years: 1 };
   }
   if (/^(lifetime|once|one-time|永久|一次性|买断)$/.test(normalized)) {

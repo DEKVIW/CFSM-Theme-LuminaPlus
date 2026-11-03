@@ -277,21 +277,46 @@ export function normalizeTrafficCalcType(value: unknown): string {
   }
 }
 
+const PRICE_AMOUNT_RE = /[+-]?(?:\d+(?:[.,]\d+)?|\.\d+)/;
+const PRICE_CURRENCY_RE = /(?:USD|US\$|CNY|RMB|EUR|€|GBP|£|JPY|HKD|AUD|CAD|SGD|\$|¥|￥)/i;
+
+export interface ParsedPrice {
+  amount: number;
+  currency: string;
+  billingCycle: string;
+}
+
 /**
- * `price` 为 `"0"` 或 `"-1"` 表示免费，空串表示未设置。
- *
- * `-1` 原样保留：那是站长显式标记的「免费」，卡片会显示「免费」而不是留空；**显式填的 `"0"` 也读成 -1**
- * （后端主题规范两者同义；原来 `"0"` 和没填都读成 0，分不出来，只有长期节点才显示「免费」）。
- * 费用统计对 `price <= 0` 一视同仁，不受影响。其余负数按未设置处理。
+ * 后端的价格字段是自由文本，旧数据常见 `$63.07/三年`、`46.60/年` 这类写法。
+ * 主题内部需要数字、货币和周期三个字段，所以在适配层拆开；后端将来单独下发的字段仍由
+ * `toNodeInfo` 优先采用。
  */
-export function parsePrice(value: unknown): number {
+export function parsePriceDetails(value: unknown): ParsedPrice {
   const raw = String(value ?? "").trim();
-  if (!raw) return 0;
-  const num = toNumber(raw.replace(/,/g, ""), Number.NaN);
-  if (!Number.isFinite(num)) return 0;
-  if (num === -1 || num === 0) return -1;
-  if (num < 0) return 0;
-  return num;
+  if (!raw) return { amount: 0, currency: "", billingCycle: "" };
+
+  const normalized = raw.replace(/,/g, "");
+  const amountMatch = PRICE_AMOUNT_RE.exec(normalized);
+  if (!amountMatch) return { amount: 0, currency: "", billingCycle: "" };
+
+  const parsed = Number.parseFloat(amountMatch[0]);
+  let amount = Number.isFinite(parsed) ? parsed : 0;
+  if (amount === 0 || amount === -1) amount = -1;
+  else if (amount < 0) amount = 0;
+
+  const prefix = normalized.slice(0, amountMatch.index);
+  const suffix = normalized.slice(amountMatch.index + amountMatch[0].length);
+  const currency = (prefix.match(PRICE_CURRENCY_RE) ?? suffix.match(PRICE_CURRENCY_RE))?.[0] ?? "";
+  const billingCycle = suffix
+    .replace(PRICE_CURRENCY_RE, "")
+    .replace(/^[\s\u00a0]*(?:[/／]|per\s+)/i, "")
+    .trim();
+
+  return { amount, currency, billingCycle };
+}
+
+export function parsePrice(value: unknown): number {
+  return parsePriceDetails(value).amount;
 }
 
 /**
@@ -322,6 +347,7 @@ export function withReportTimestamp(server: CfsmServer, reportTs: unknown): Cfsm
 
 export function toNodeInfo(server: CfsmServer): NodeInfo {
   const gpus = parseGpuInfo(server.gpu_info);
+  const priceDetails = parsePriceDetails(server.price);
   return {
     uuid: server.id,
     name: server.name,
@@ -338,10 +364,10 @@ export function toNodeInfo(server: CfsmServer): NodeInfo {
     swap_total: server.swap_total * MIB,
     disk_total: server.disk_total * MIB,
     weight: server.sort_order,
-    price: parsePrice(server.price),
-    billing_cycle: server.billing_cycle,
+    price: priceDetails.amount,
+    billing_cycle: server.billing_cycle.trim() || priceDetails.billingCycle,
     auto_renewal: String(server.auto_renewal) === "1",
-    currency: server.currency,
+    currency: server.currency.trim() || priceDetails.currency,
     expired_at: server.expire_date,
     tags: server.tags,
     // note 是管理端内部字段，公共接口不返回。

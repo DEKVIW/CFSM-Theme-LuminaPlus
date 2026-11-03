@@ -1,8 +1,46 @@
 .os-logo {
-  display: block;
+  display: inline-grid;
+  place-items: center;
   width: var(--os-logo-size);
   height: var(--os-logo-size);
   flex: 0 0 auto;
-  object-fit: contain;
+  color: var(--text-tertiary);
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.16));
+}
+
+.os-logo[data-os="Ubuntu"] {
+  color: #e95420;
+}
+
+.os-logo[data-os="Debian"] {
+  color: #d70a53;
+}
+
+.os-logo[data-os="Windows"] {
+  color: #0078d4;
+}
+
+.os-logo[data-os="macOS"] {
+  color: var(--text-secondary);
+}
+
+.region-marker {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 75%, transparent);
+  border-radius: 4px;
+  background: var(--fill-tertiary);
+  color: var(--text-secondary);
+  font-size: 7px;
+  font-weight: 760;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.region-marker svg {
+  flex: 0 0 auto;
 }
