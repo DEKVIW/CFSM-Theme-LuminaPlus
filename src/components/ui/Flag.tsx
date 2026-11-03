@@ -1,7 +1,7 @@
 import { Globe2 } from "lucide-react";
 import * as FlagIcons from "country-flag-icons/react/3x2";
 import type { ComponentType, SVGProps } from "react";
-import { t } from "@/i18n";
+import { getLocale, t } from "@/i18n";
 import { getDisplayRegionCode } from "@/utils/geo";
 
 interface FlagProps {
@@ -20,6 +20,17 @@ function countryFlag(code: string): CountryFlag | null {
   return (FlagIcons as Record<string, CountryFlag | undefined>)[normalized] ?? null;
 }
 
+function countryName(code: string): string {
+  if (code === "UN") return t("flag.unknown");
+
+  try {
+    const name = new Intl.DisplayNames([getLocale()], { type: "region" }).of(code);
+    return name || code;
+  } catch {
+    return code;
+  }
+}
+
 export function Flag({ region, size = 14 }: FlagProps) {
   const value = region?.trim() ?? "";
 
@@ -32,7 +43,7 @@ export function Flag({ region, size = 14 }: FlagProps) {
   }
 
   const flagCode = getDisplayRegionCode(value);
-  const alt = t("flag.alt", { code: flagCode });
+  const alt = t("flag.alt", { code: flagCode, name: countryName(flagCode) });
   const FlagIcon = countryFlag(flagCode);
 
   return (
