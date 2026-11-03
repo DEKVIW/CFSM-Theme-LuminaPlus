@@ -7,6 +7,14 @@ interface FlagProps {
   size?: number;
 }
 
+function countryFlagEmoji(code: string): string | null {
+  const normalized = code.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(normalized) || normalized === "UN") return null;
+  return Array.from(normalized)
+    .map((character) => String.fromCodePoint(0x1f1e6 + character.charCodeAt(0) - 65))
+    .join("");
+}
+
 export function Flag({ region, size = 14 }: FlagProps) {
   const value = region?.trim() ?? "";
 
@@ -20,6 +28,7 @@ export function Flag({ region, size = 14 }: FlagProps) {
 
   const flagCode = getDisplayRegionCode(value);
   const alt = t("flag.alt", { code: flagCode });
+  const emoji = countryFlagEmoji(flagCode);
 
   return (
     <span
@@ -28,9 +37,9 @@ export function Flag({ region, size = 14 }: FlagProps) {
       title={alt}
       className="region-marker"
       data-region-code={flagCode}
-      style={{ width: size + 8, height: size }}
+      style={{ width: size + 8, height: size, fontSize: size }}
     >
-      {flagCode === "UN" ? <Globe2 size={size - 1} strokeWidth={2.1} /> : flagCode}
+      {emoji ? emoji : <Globe2 size={size - 1} strokeWidth={2.1} />}
     </span>
   );
 }

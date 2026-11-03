@@ -4,7 +4,7 @@
   width: var(--os-logo-size);
   height: var(--os-logo-size);
   flex: 0 0 auto;
-  color: var(--text-tertiary);
+  color: var(--os-logo-color, var(--text-tertiary));
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.16));
 }
 
@@ -29,14 +29,13 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  gap: 2px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 75%, transparent);
-  border-radius: 4px;
-  background: var(--fill-tertiary);
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
   color: var(--text-secondary);
-  font-size: 7px;
-  font-weight: 760;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+  font-weight: 400;
   line-height: 1;
   letter-spacing: 0;
 }

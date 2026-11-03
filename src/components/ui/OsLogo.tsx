@@ -1,5 +1,33 @@
+import {
+  siAlmalinux,
+  siAlpinelinux,
+  siArchlinux,
+  siCentos,
+  siDebian,
+  siFedora,
+  siFreebsd,
+  siGentoo,
+  siHuawei,
+  siKalilinux,
+  siLinux,
+  siLinuxmint,
+  siMacos,
+  siManjaro,
+  siNixos,
+  siOpensuse,
+  siOpenwrt,
+  siProxmox,
+  siQnap,
+  siRedhat,
+  siRockylinux,
+  siSynology,
+  siUbuntu,
+  siUnraid,
+  siAlibabacloud,
+  type SimpleIcon,
+} from "simple-icons";
 import { HardDrive, Monitor, Server, Terminal } from "lucide-react";
-import { memo, type ReactNode } from "react";
+import { memo, type CSSProperties, type ReactNode } from "react";
 
 interface OsConfig {
   name: string;
@@ -202,6 +230,52 @@ function findOsConfig(osString?: string | null): OsConfig {
   return DEFAULT_OS_CONFIG;
 }
 
+const OS_BRAND_ICONS: Partial<Record<string, SimpleIcon>> = {
+  AlmaLinux: siAlmalinux,
+  "Alpine Linux": siAlpinelinux,
+  Armbian: siLinux,
+  CentOS: siCentos,
+  Debian: siDebian,
+  FreeBSD: siFreebsd,
+  Ubuntu: siUbuntu,
+  "Arch Linux": siArchlinux,
+  "Kali Linux": siKalilinux,
+  iStoreOS: siLinux,
+  OpenWrt: siOpenwrt,
+  ImmortalWrt: siOpenwrt,
+  NixOS: siNixos,
+  "Rocky Linux": siRockylinux,
+  Fedora: siFedora,
+  openSUSE: siOpensuse,
+  Gentoo: siGentoo,
+  "Red Hat": siRedhat,
+  "Linux Mint": siLinuxmint,
+  Manjaro: siManjaro,
+  "Synology DSM": siSynology,
+  "Proxmox VE": siProxmox,
+  macOS: siMacos,
+  QTS: siQnap,
+  Huawei: siHuawei,
+  Aliyun: siAlibabacloud,
+  Unraid: siUnraid,
+  Linux: siLinux,
+};
+
+function BrandGlyph({ icon, size }: { icon: SimpleIcon; size: number }) {
+  return (
+    <svg
+      aria-hidden
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      focusable="false"
+    >
+      <path d={icon.path} />
+    </svg>
+  );
+}
+
 function osGlyph(name: string, size: number): ReactNode {
   if (name === "Windows" || name === "macOS") {
     return <Monitor size={size} strokeWidth={2} />;
@@ -236,6 +310,7 @@ export const OsLogo = memo(function OsLogo({
   size?: number;
 }) {
   const os = resolveOsInfo(value);
+  const brandIcon = OS_BRAND_ICONS[os.name];
 
   return (
     <span
@@ -244,9 +319,14 @@ export const OsLogo = memo(function OsLogo({
       aria-label={os.name}
       title={os.name}
       data-os={os.name}
-      style={{ "--os-logo-size": `${size}px` } as React.CSSProperties}
+      style={
+        {
+          "--os-logo-size": `${size}px`,
+          "--os-logo-color": brandIcon ? `#${brandIcon.hex}` : undefined,
+        } as CSSProperties
+      }
     >
-      {osGlyph(os.name, size)}
+      {brandIcon ? <BrandGlyph icon={brandIcon} size={size} /> : osGlyph(os.name, size)}
     </span>
   );
 });
